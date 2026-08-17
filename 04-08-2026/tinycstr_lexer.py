@@ -26,6 +26,7 @@ class TinyCStrLexer(Lexer):
     def ID(self, t):
         t.type = self.keywords.get(t.value, 'ID')
         return t
+ # the t return the t type and value
 
     NUMBER = r'\d+'
     ASSIGN = r'='
