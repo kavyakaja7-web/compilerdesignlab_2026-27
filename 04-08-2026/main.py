@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 TinyCStr compiler driver.
 
@@ -48,30 +47,34 @@ def check_parse_only(source_path):
 
 
 def write_3ac_debug(source_path, out_file):
-    """
-    Not one of the original driver's flags -- a debugging aid so you can
-    inspect the triple-form 3AC without reading MIPS. Wired to `-3ac`.
-    """
     program, had_error = _parse_source(source_path)
     if had_error:
         print("# parse error -- cannot generate 3AC", file=out_file)
         return
-    program.generateTripleTAC()
+    try:
+        program.generateTripleTAC()
+    except Exception:
+        not_implemented_stage(
+            '3ac generation for Level 2 constructs (RelOp/Cast/Ternary, '
+            'non-INT variables)', planned_week=6, out_file=out_file)
+        return
     func = program.getFunctions()[0]
     out_file.write(func.renderTripleTAC() + "\n")
 
 
 def write_compile(source_path, out_file):
-    """
-    WEEK 4: full pipeline via the OOP flow described in the module
-    docstring above. Only handles a single function (main) for now 
-    """
     program, had_error = _parse_source(source_path)
     if had_error:
         print("# parse error -- cannot compile", file=out_file)
         return
-    program.generateTripleTAC()
-    program.compile()
+    try:
+        program.generateTripleTAC()
+        program.compile()
+    except Exception:
+        not_implemented_stage(
+            'compile for Level 2 constructs (RelOp/Cast/Ternary, '
+            'non-INT variables)', planned_week=7, out_file=out_file)
+        return
     func = program.getFunctions()[0]
     out_file.write(func.getMipsCode())
 
@@ -107,7 +110,6 @@ def main(argv=None):
     parser = build_arg_parser()
     args = parser.parse_args(argv)
 
-   # args.compile = True  # default value -- see Week 2/3's main.py for rationale
 
     if args.tokens:
         with open(args.file + ".toks", "w") as f:
@@ -118,7 +120,7 @@ def main(argv=None):
         args.compile = False
         ok = check_parse_only(args.file)
         if ok:
-            print(f"[main.py] '{args.file}' parses successfully (Level 1 grammar).")
+            print(f"[main.py] '{args.file}' parses successfully.")
         else:
             print(f"[main.py] '{args.file}' has a syntax error -- see messages above.",
                   file=sys.stderr)
@@ -138,7 +140,7 @@ def main(argv=None):
 
     if args.compile:
         with open(args.file + ".spim", "w") as f:
-            write_compile(args.file, f)  
+            write_compile(args.file, f)
 
 
 if __name__ == '__main__':
